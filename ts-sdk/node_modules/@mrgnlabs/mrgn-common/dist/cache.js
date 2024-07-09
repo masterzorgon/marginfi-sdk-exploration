@@ -1,0 +1,81 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.loadBankMetadatas = exports.loadTokenMetadatas = void 0;
+const superstruct_1 = require("superstruct");
+const TokenMetadataRaw = (0, superstruct_1.object)({
+    address: (0, superstruct_1.string)(),
+    chainId: (0, superstruct_1.number)(),
+    decimals: (0, superstruct_1.number)(),
+    name: (0, superstruct_1.string)(),
+    symbol: (0, superstruct_1.string)(),
+    logoURI: (0, superstruct_1.string)(),
+    extensions: (0, superstruct_1.object)(),
+});
+const TokenMetadataList = (0, superstruct_1.array)(TokenMetadataRaw);
+function parseTokenMetadata(tokenMetadataRaw) {
+    return {
+        icon: tokenMetadataRaw.logoURI,
+        name: tokenMetadataRaw.name,
+        symbol: tokenMetadataRaw.symbol,
+    };
+}
+function parseTokenMetadatas(tokenMetadataListRaw) {
+    return tokenMetadataListRaw.reduce((config, current, _) => ({
+        [current.symbol]: parseTokenMetadata(current),
+        ...config,
+    }), {});
+}
+async function loadTokenMetadatas() {
+    const response = await fetch(`https://storage.googleapis.com/mrgn-public/mrgn-token-metadata-cache.json`, {
+        headers: {
+            Accept: "application/json",
+        },
+        method: "GET",
+    });
+    if (response.status === 200) {
+        const responseData = await response.json();
+        (0, superstruct_1.assert)(responseData, TokenMetadataList);
+        return parseTokenMetadatas(responseData);
+    }
+    else {
+        throw new Error("Failed to fetch token metadata cache");
+    }
+}
+exports.loadTokenMetadatas = loadTokenMetadatas;
+const BankMetadataRaw = (0, superstruct_1.object)({
+    bankAddress: (0, superstruct_1.string)(),
+    tokenAddress: (0, superstruct_1.string)(),
+    tokenName: (0, superstruct_1.string)(),
+    tokenSymbol: (0, superstruct_1.string)(),
+});
+const BankMetadataList = (0, superstruct_1.array)(BankMetadataRaw);
+function parseBankMetadata(bankMetadataRaw) {
+    return {
+        tokenAddress: bankMetadataRaw.tokenAddress,
+        tokenName: bankMetadataRaw.tokenName,
+        tokenSymbol: bankMetadataRaw.tokenSymbol,
+    };
+}
+function parseBankMetadatas(bankMetadataListRaw) {
+    return bankMetadataListRaw.reduce((config, current, _) => ({
+        [current.bankAddress]: parseBankMetadata(current),
+        ...config,
+    }), {});
+}
+async function loadBankMetadatas() {
+    const response = await fetch(`https://storage.googleapis.com/mrgn-public/mrgn-bank-metadata-cache.json`, {
+        headers: {
+            Accept: "application/json",
+        },
+        method: "GET",
+    });
+    if (response.status === 200) {
+        const responseData = await response.json();
+        (0, superstruct_1.assert)(responseData, BankMetadataList);
+        return parseBankMetadatas(responseData);
+    }
+    else {
+        throw new Error("Failed to fetch bank metadata cache");
+    }
+}
+exports.loadBankMetadatas = loadBankMetadatas;

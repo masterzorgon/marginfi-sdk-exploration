@@ -1,0 +1,19 @@
+/// <reference types="node" />
+import { AccountInfo, Connection, Keypair, Signer, Transaction, TransactionSignature, VersionedTransaction } from "@solana/web3.js";
+import { TransactionOptions, Wallet } from "./types";
+/**
+ * Load Keypair from the provided file.
+ */
+export declare function loadKeypair(keypairPath: string): Keypair;
+export declare function getValueInsensitive<T>(map: Record<string, T>, key: string): T;
+/**
+ * Transaction processing and error-handling helper.
+ */
+export declare function processTransaction(connection: Connection, wallet: Wallet, transaction: Transaction | VersionedTransaction, signers?: Array<Signer>, opts?: TransactionOptions): Promise<TransactionSignature>;
+/**
+ * @internal
+ */
+export declare function sleep(ms: number): Promise<unknown>;
+export declare function chunks<T>(array: T[], size: number): T[][];
+export declare function chunkedGetRawMultipleAccountInfos(connection: Connection, pks: string[], batchChunkSize?: number, maxAccountsChunkSize?: number): Promise<[number, Map<string, AccountInfo<Buffer>>]>;
+//# sourceMappingURL=misc.d.ts.map

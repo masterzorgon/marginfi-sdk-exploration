@@ -1,0 +1,570 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createMemoInstruction = exports.MEMO_PROGRAM_ID = exports.getMint = exports.MINT_SIZE = exports.MintLayout = exports.addSigners = exports.createInitializeAccountInstruction = exports.initializeAccountInstructionData = exports.TokenInstruction = exports.createTransferCheckedInstruction = exports.transferCheckedInstructionData = exports.createCloseAccountInstruction = exports.closeAccountInstructionData = exports.createSyncNativeInstruction = exports.syncNativeInstructionData = exports.createAssociatedTokenAccountIdempotentInstruction = exports.createAssociatedTokenAccountInstruction = exports.getAssociatedTokenAddressSync = exports.ASSOCIATED_TOKEN_PROGRAM_ID = exports.unpackAccount = exports.getMinimumBalanceForRentExemptAccountWithExtensions = exports.LENGTH_SIZE = exports.TYPE_SIZE = exports.getAccountLen = exports.ExtensionType = exports.getMinimumBalanceForRentExemptAccount = exports.getMultipleAccounts = exports.TOKEN_PROGRAM_ID = exports.getAccount = exports.NATIVE_MINT = exports.ACCOUNT_SIZE = exports.AccountLayout = exports.AccountState = exports.TokenUnsupportedInstructionError = exports.TokenInvalidInstructionTypeError = exports.TokenInvalidInstructionDataError = exports.TokenInvalidInstructionKeysError = exports.TokenInvalidInstructionProgramError = exports.TokenOwnerOffCurveError = exports.TokenInvalidOwnerError = exports.TokenInvalidMintError = exports.TokenInvalidAccountSizeError = exports.TokenInvalidAccountOwnerError = exports.TokenInvalidAccountError = exports.TokenAccountNotFoundError = exports.TokenError = exports.ACCOUNT_TYPE_SIZE = exports.SplAccountType = exports.MULTISIG_SIZE = exports.MultisigLayout = void 0;
+const buffer_layout_1 = require("@solana/buffer-layout");
+const buffer_layout_utils_1 = require("@solana/buffer-layout-utils");
+const web3_js_1 = require("@solana/web3.js");
+const buffer_1 = require("buffer");
+/** Buffer layout for de/serializing a multisig */
+exports.MultisigLayout = (0, buffer_layout_1.struct)([
+    (0, buffer_layout_1.u8)("m"),
+    (0, buffer_layout_1.u8)("n"),
+    (0, buffer_layout_utils_1.bool)("isInitialized"),
+    (0, buffer_layout_utils_1.publicKey)("signer1"),
+    (0, buffer_layout_utils_1.publicKey)("signer2"),
+    (0, buffer_layout_utils_1.publicKey)("signer3"),
+    (0, buffer_layout_utils_1.publicKey)("signer4"),
+    (0, buffer_layout_utils_1.publicKey)("signer5"),
+    (0, buffer_layout_utils_1.publicKey)("signer6"),
+    (0, buffer_layout_utils_1.publicKey)("signer7"),
+    (0, buffer_layout_utils_1.publicKey)("signer8"),
+    (0, buffer_layout_utils_1.publicKey)("signer9"),
+    (0, buffer_layout_utils_1.publicKey)("signer10"),
+    (0, buffer_layout_utils_1.publicKey)("signer11"),
+]);
+/** Byte length of a multisig */
+exports.MULTISIG_SIZE = exports.MultisigLayout.span;
+var SplAccountType;
+(function (SplAccountType) {
+    SplAccountType[SplAccountType["Uninitialized"] = 0] = "Uninitialized";
+    SplAccountType[SplAccountType["Mint"] = 1] = "Mint";
+    SplAccountType[SplAccountType["Account"] = 2] = "Account";
+})(SplAccountType = exports.SplAccountType || (exports.SplAccountType = {}));
+exports.ACCOUNT_TYPE_SIZE = 1;
+/** Base class for errors */
+class TokenError extends Error {
+    constructor(message) {
+        super(message);
+    }
+}
+exports.TokenError = TokenError;
+/** Thrown if an account is not found at the expected address */
+class TokenAccountNotFoundError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenAccountNotFoundError";
+    }
+}
+exports.TokenAccountNotFoundError = TokenAccountNotFoundError;
+/** Thrown if a program state account is not a valid Account */
+class TokenInvalidAccountError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidAccountError";
+    }
+}
+exports.TokenInvalidAccountError = TokenInvalidAccountError;
+/** Thrown if a program state account is not owned by the expected token program */
+class TokenInvalidAccountOwnerError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidAccountOwnerError";
+    }
+}
+exports.TokenInvalidAccountOwnerError = TokenInvalidAccountOwnerError;
+/** Thrown if the byte length of an program state account doesn't match the expected size */
+class TokenInvalidAccountSizeError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidAccountSizeError";
+    }
+}
+exports.TokenInvalidAccountSizeError = TokenInvalidAccountSizeError;
+/** Thrown if the mint of a token account doesn't match the expected mint */
+class TokenInvalidMintError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidMintError";
+    }
+}
+exports.TokenInvalidMintError = TokenInvalidMintError;
+/** Thrown if the owner of a token account doesn't match the expected owner */
+class TokenInvalidOwnerError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidOwnerError";
+    }
+}
+exports.TokenInvalidOwnerError = TokenInvalidOwnerError;
+/** Thrown if the owner of a token account is a PDA (Program Derived Address) */
+class TokenOwnerOffCurveError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenOwnerOffCurveError";
+    }
+}
+exports.TokenOwnerOffCurveError = TokenOwnerOffCurveError;
+/** Thrown if an instruction's program is invalid */
+class TokenInvalidInstructionProgramError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidInstructionProgramError";
+    }
+}
+exports.TokenInvalidInstructionProgramError = TokenInvalidInstructionProgramError;
+/** Thrown if an instruction's keys are invalid */
+class TokenInvalidInstructionKeysError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidInstructionKeysError";
+    }
+}
+exports.TokenInvalidInstructionKeysError = TokenInvalidInstructionKeysError;
+/** Thrown if an instruction's data is invalid */
+class TokenInvalidInstructionDataError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidInstructionDataError";
+    }
+}
+exports.TokenInvalidInstructionDataError = TokenInvalidInstructionDataError;
+/** Thrown if an instruction's type is invalid */
+class TokenInvalidInstructionTypeError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenInvalidInstructionTypeError";
+    }
+}
+exports.TokenInvalidInstructionTypeError = TokenInvalidInstructionTypeError;
+/** Thrown if the program does not support the desired instruction */
+class TokenUnsupportedInstructionError extends TokenError {
+    constructor() {
+        super(...arguments);
+        this.name = "TokenUnsupportedInstructionError";
+    }
+}
+exports.TokenUnsupportedInstructionError = TokenUnsupportedInstructionError;
+/** Token account state as stored by the program */
+var AccountState;
+(function (AccountState) {
+    AccountState[AccountState["Uninitialized"] = 0] = "Uninitialized";
+    AccountState[AccountState["Initialized"] = 1] = "Initialized";
+    AccountState[AccountState["Frozen"] = 2] = "Frozen";
+})(AccountState = exports.AccountState || (exports.AccountState = {}));
+/** Buffer layout for de/serializing a token account */
+exports.AccountLayout = (0, buffer_layout_1.struct)([
+    (0, buffer_layout_utils_1.publicKey)("mint"),
+    (0, buffer_layout_utils_1.publicKey)("owner"),
+    (0, buffer_layout_utils_1.u64)("amount"),
+    (0, buffer_layout_1.u32)("delegateOption"),
+    (0, buffer_layout_utils_1.publicKey)("delegate"),
+    (0, buffer_layout_1.u8)("state"),
+    (0, buffer_layout_1.u32)("isNativeOption"),
+    (0, buffer_layout_utils_1.u64)("isNative"),
+    (0, buffer_layout_utils_1.u64)("delegatedAmount"),
+    (0, buffer_layout_1.u32)("closeAuthorityOption"),
+    (0, buffer_layout_utils_1.publicKey)("closeAuthority"),
+]);
+/** Byte length of a token account */
+exports.ACCOUNT_SIZE = exports.AccountLayout.span;
+exports.NATIVE_MINT = new web3_js_1.PublicKey("So11111111111111111111111111111111111111112");
+/**
+ * Retrieve information about a token account
+ *
+ * @param connection Connection to use
+ * @param address    Token account
+ * @param commitment Desired level of commitment for querying the state
+ * @param programId  SPL Token program account
+ *
+ * @return Token account information
+ */
+async function getAccount(connection, address, commitment, programId = exports.TOKEN_PROGRAM_ID) {
+    const info = await connection.getAccountInfo(address, commitment);
+    return unpackAccount(address, info, programId);
+}
+exports.getAccount = getAccount;
+exports.TOKEN_PROGRAM_ID = new web3_js_1.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+/**
+ * Retrieve information about multiple token accounts in a single RPC call
+ *
+ * @param connection Connection to use
+ * @param addresses  Token accounts
+ * @param commitment Desired level of commitment for querying the state
+ * @param programId  SPL Token program account
+ *
+ * @return Token account information
+ */
+async function getMultipleAccounts(connection, addresses, commitment, programId = exports.TOKEN_PROGRAM_ID) {
+    const infos = await connection.getMultipleAccountsInfo(addresses, commitment);
+    return addresses.map((address, i) => 
+    //@ts-ignore
+    unpackAccount(address, infos[i], programId));
+}
+exports.getMultipleAccounts = getMultipleAccounts;
+/** Get the minimum lamport balance for a base token account to be rent exempt
+ *
+ * @param connection Connection to use
+ * @param commitment Desired level of commitment for querying the state
+ *
+ * @return Amount of lamports required
+ */
+async function getMinimumBalanceForRentExemptAccount(connection, commitment) {
+    return await getMinimumBalanceForRentExemptAccountWithExtensions(connection, [], commitment);
+}
+exports.getMinimumBalanceForRentExemptAccount = getMinimumBalanceForRentExemptAccount;
+var ExtensionType;
+(function (ExtensionType) {
+    ExtensionType[ExtensionType["Uninitialized"] = 0] = "Uninitialized";
+    ExtensionType[ExtensionType["TransferFeeConfig"] = 1] = "TransferFeeConfig";
+    ExtensionType[ExtensionType["TransferFeeAmount"] = 2] = "TransferFeeAmount";
+    ExtensionType[ExtensionType["MintCloseAuthority"] = 3] = "MintCloseAuthority";
+    ExtensionType[ExtensionType["ConfidentialTransferMint"] = 4] = "ConfidentialTransferMint";
+    ExtensionType[ExtensionType["ConfidentialTransferAccount"] = 5] = "ConfidentialTransferAccount";
+    ExtensionType[ExtensionType["DefaultAccountState"] = 6] = "DefaultAccountState";
+    ExtensionType[ExtensionType["ImmutableOwner"] = 7] = "ImmutableOwner";
+    ExtensionType[ExtensionType["MemoTransfer"] = 8] = "MemoTransfer";
+    ExtensionType[ExtensionType["NonTransferable"] = 9] = "NonTransferable";
+    ExtensionType[ExtensionType["InterestBearingMint"] = 10] = "InterestBearingMint";
+})(ExtensionType = exports.ExtensionType || (exports.ExtensionType = {}));
+function getAccountLen(extensionTypes) {
+    return getLen(extensionTypes, exports.ACCOUNT_SIZE);
+}
+exports.getAccountLen = getAccountLen;
+exports.TYPE_SIZE = 2;
+exports.LENGTH_SIZE = 2;
+function getLen(extensionTypes, baseSize) {
+    if (extensionTypes.length === 0) {
+        return baseSize;
+    }
+    else {
+        const accountLength = exports.ACCOUNT_SIZE + exports.ACCOUNT_TYPE_SIZE;
+        if (accountLength === exports.MULTISIG_SIZE) {
+            return accountLength + exports.TYPE_SIZE;
+        }
+        else {
+            return accountLength;
+        }
+    }
+}
+/** Get the minimum lamport balance for a rent-exempt token account with extensions
+ *
+ * @param connection Connection to use
+ * @param extensions
+ * @param commitment Desired level of commitment for querying the state
+ *
+ * @return Amount of lamports required
+ */
+async function getMinimumBalanceForRentExemptAccountWithExtensions(connection, extensions, commitment) {
+    const accountLen = getAccountLen(extensions);
+    return await connection.getMinimumBalanceForRentExemption(accountLen, commitment);
+}
+exports.getMinimumBalanceForRentExemptAccountWithExtensions = getMinimumBalanceForRentExemptAccountWithExtensions;
+/**
+ * Unpack a token account
+ *
+ * @param address   Token account
+ * @param info      Token account data
+ * @param programId SPL Token program account
+ *
+ * @return Unpacked token account
+ */
+function unpackAccount(address, info, programId = exports.TOKEN_PROGRAM_ID) {
+    if (!info)
+        throw new TokenAccountNotFoundError();
+    if (!info.owner.equals(programId))
+        throw new TokenInvalidAccountOwnerError();
+    if (info.data.length < exports.ACCOUNT_SIZE)
+        throw new TokenInvalidAccountSizeError();
+    const rawAccount = exports.AccountLayout.decode(info.data.slice(0, exports.ACCOUNT_SIZE));
+    let tlvData = buffer_1.Buffer.alloc(0);
+    if (info.data.length > exports.ACCOUNT_SIZE) {
+        if (info.data.length === exports.MULTISIG_SIZE)
+            throw new TokenInvalidAccountSizeError();
+        if (info.data[exports.ACCOUNT_SIZE] != SplAccountType.Account)
+            throw new TokenInvalidAccountError();
+        tlvData = info.data.slice(exports.ACCOUNT_SIZE + exports.ACCOUNT_TYPE_SIZE);
+    }
+    return {
+        address,
+        mint: rawAccount.mint,
+        owner: rawAccount.owner,
+        amount: rawAccount.amount,
+        delegate: rawAccount.delegateOption ? rawAccount.delegate : null,
+        delegatedAmount: rawAccount.delegatedAmount,
+        isInitialized: rawAccount.state !== AccountState.Uninitialized,
+        isFrozen: rawAccount.state === AccountState.Frozen,
+        isNative: !!rawAccount.isNativeOption,
+        rentExemptReserve: rawAccount.isNativeOption ? rawAccount.isNative : null,
+        closeAuthority: rawAccount.closeAuthorityOption ? rawAccount.closeAuthority : null,
+        tlvData,
+    };
+}
+exports.unpackAccount = unpackAccount;
+/** Address of the SPL Associated Token Account program */
+exports.ASSOCIATED_TOKEN_PROGRAM_ID = new web3_js_1.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+/**
+ * Get the address of the associated token account for a given mint and owner
+ *
+ * @param mint                     Token mint account
+ * @param owner                    Owner of the new account
+ * @param allowOwnerOffCurve       Allow the owner account to be a PDA (Program Derived Address)
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Address of the associated token account
+ */
+function getAssociatedTokenAddressSync(mint, owner, allowOwnerOffCurve = false, programId = exports.TOKEN_PROGRAM_ID, associatedTokenProgramId = exports.ASSOCIATED_TOKEN_PROGRAM_ID) {
+    if (!allowOwnerOffCurve && !web3_js_1.PublicKey.isOnCurve(owner.toBuffer()))
+        throw new TokenOwnerOffCurveError();
+    const [address] = web3_js_1.PublicKey.findProgramAddressSync([owner.toBuffer(), programId.toBuffer(), mint.toBuffer()], associatedTokenProgramId);
+    return address;
+}
+exports.getAssociatedTokenAddressSync = getAssociatedTokenAddressSync;
+/**
+ * Construct an AssociatedTokenAccount instruction
+ *
+ * @param payer                    Payer of the initialization fees
+ * @param associatedToken          New associated token account
+ * @param owner                    Owner of the new account
+ * @param mint                     Token mint account
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+function createAssociatedTokenAccountInstruction(payer, associatedToken, owner, mint, programId = exports.TOKEN_PROGRAM_ID, associatedTokenProgramId = exports.ASSOCIATED_TOKEN_PROGRAM_ID) {
+    const keys = [
+        { pubkey: payer, isSigner: true, isWritable: true },
+        { pubkey: associatedToken, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: false, isWritable: false },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: web3_js_1.SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: programId, isSigner: false, isWritable: false },
+        { pubkey: web3_js_1.SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    ];
+    return new web3_js_1.TransactionInstruction({
+        keys,
+        programId: associatedTokenProgramId,
+        data: buffer_1.Buffer.alloc(0),
+    });
+}
+exports.createAssociatedTokenAccountInstruction = createAssociatedTokenAccountInstruction;
+/**
+ * Construct a CreateAssociatedTokenAccountIdempotent instruction
+ *
+ * @param payer                    Payer of the initialization fees
+ * @param associatedToken          New associated token account
+ * @param owner                    Owner of the new account
+ * @param mint                     Token mint account
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+function createAssociatedTokenAccountIdempotentInstruction(payer, associatedToken, owner, mint, programId = exports.TOKEN_PROGRAM_ID, associatedTokenProgramId = exports.ASSOCIATED_TOKEN_PROGRAM_ID) {
+    return buildAssociatedTokenAccountInstruction(payer, associatedToken, owner, mint, buffer_1.Buffer.from([1]), programId, associatedTokenProgramId);
+}
+exports.createAssociatedTokenAccountIdempotentInstruction = createAssociatedTokenAccountIdempotentInstruction;
+/** TODO: docs */
+exports.syncNativeInstructionData = (0, buffer_layout_1.struct)([(0, buffer_layout_1.u8)("instruction")]);
+/**
+ * Construct a SyncNative instruction
+ *
+ * @param account   Native account to sync lamports from
+ * @param programId SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+function createSyncNativeInstruction(account, programId = exports.TOKEN_PROGRAM_ID) {
+    const keys = [{ pubkey: account, isSigner: false, isWritable: true }];
+    const data = buffer_1.Buffer.alloc(exports.syncNativeInstructionData.span);
+    exports.syncNativeInstructionData.encode({ instruction: TokenInstruction.SyncNative }, data);
+    return new web3_js_1.TransactionInstruction({ keys, programId, data });
+}
+exports.createSyncNativeInstruction = createSyncNativeInstruction;
+/** TODO: docs */
+exports.closeAccountInstructionData = (0, buffer_layout_1.struct)([(0, buffer_layout_1.u8)("instruction")]);
+/**
+ * Construct a CloseAccount instruction
+ *
+ * @param account      Account to close
+ * @param destination  Account to receive the remaining balance of the closed account
+ * @param authority    Account close authority
+ * @param multiSigners Signing accounts if `authority` is a multisig
+ * @param programId    SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+function createCloseAccountInstruction(account, destination, authority, multiSigners = [], programId = exports.TOKEN_PROGRAM_ID) {
+    const keys = addSigners([
+        { pubkey: account, isSigner: false, isWritable: true },
+        { pubkey: destination, isSigner: false, isWritable: true },
+    ], authority, multiSigners);
+    const data = buffer_1.Buffer.alloc(exports.closeAccountInstructionData.span);
+    exports.closeAccountInstructionData.encode({ instruction: TokenInstruction.CloseAccount }, data);
+    return new web3_js_1.TransactionInstruction({ keys, programId, data });
+}
+exports.createCloseAccountInstruction = createCloseAccountInstruction;
+function buildAssociatedTokenAccountInstruction(payer, associatedToken, owner, mint, instructionData, programId = exports.TOKEN_PROGRAM_ID, associatedTokenProgramId = exports.ASSOCIATED_TOKEN_PROGRAM_ID) {
+    const keys = [
+        { pubkey: payer, isSigner: true, isWritable: true },
+        { pubkey: associatedToken, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: false, isWritable: false },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: web3_js_1.SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: programId, isSigner: false, isWritable: false },
+    ];
+    return new web3_js_1.TransactionInstruction({
+        keys,
+        programId: associatedTokenProgramId,
+        data: instructionData,
+    });
+}
+/** TODO: docs */
+exports.transferCheckedInstructionData = (0, buffer_layout_1.struct)([
+    (0, buffer_layout_1.u8)("instruction"),
+    (0, buffer_layout_utils_1.u64)("amount"),
+    (0, buffer_layout_1.u8)("decimals"),
+]);
+/**
+ * Construct a TransferChecked instruction
+ *
+ * @param source       Source account
+ * @param mint         Mint account
+ * @param destination  Destination account
+ * @param owner        Owner of the source account
+ * @param amount       Number of tokens to transfer
+ * @param decimals     Number of decimals in transfer amount
+ * @param multiSigners Signing accounts if `owner` is a multisig
+ * @param programId    SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+function createTransferCheckedInstruction(source, mint, destination, owner, amount, decimals, multiSigners = [], programId = exports.TOKEN_PROGRAM_ID) {
+    const keys = addSigners([
+        { pubkey: source, isSigner: false, isWritable: true },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: destination, isSigner: false, isWritable: true },
+    ], owner, multiSigners);
+    const data = buffer_1.Buffer.alloc(exports.transferCheckedInstructionData.span);
+    exports.transferCheckedInstructionData.encode({
+        instruction: TokenInstruction.TransferChecked,
+        amount: BigInt(amount),
+        decimals,
+    }, data);
+    return new web3_js_1.TransactionInstruction({ keys, programId, data });
+}
+exports.createTransferCheckedInstruction = createTransferCheckedInstruction;
+/** Instructions defined by the program */
+var TokenInstruction;
+(function (TokenInstruction) {
+    TokenInstruction[TokenInstruction["InitializeAccount"] = 1] = "InitializeAccount";
+    TokenInstruction[TokenInstruction["TransferChecked"] = 12] = "TransferChecked";
+    TokenInstruction[TokenInstruction["CloseAccount"] = 9] = "CloseAccount";
+    TokenInstruction[TokenInstruction["SyncNative"] = 17] = "SyncNative";
+})(TokenInstruction = exports.TokenInstruction || (exports.TokenInstruction = {}));
+exports.initializeAccountInstructionData = (0, buffer_layout_1.struct)([(0, buffer_layout_1.u8)("instruction")]);
+/**
+ * Construct an InitializeAccount instruction
+ *
+ * @param account   New token account
+ * @param mint      Mint account
+ * @param owner     Owner of the new account
+ * @param programId SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+function createInitializeAccountInstruction(account, mint, owner, programId = exports.TOKEN_PROGRAM_ID) {
+    const keys = [
+        { pubkey: account, isSigner: false, isWritable: true },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: owner, isSigner: false, isWritable: false },
+        { pubkey: web3_js_1.SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    ];
+    const data = buffer_1.Buffer.alloc(exports.initializeAccountInstructionData.span);
+    exports.initializeAccountInstructionData.encode({ instruction: TokenInstruction.InitializeAccount }, data);
+    return new web3_js_1.TransactionInstruction({ keys, programId, data });
+}
+exports.createInitializeAccountInstruction = createInitializeAccountInstruction;
+/** @internal */
+function addSigners(keys, ownerOrAuthority, multiSigners) {
+    if (multiSigners.length) {
+        keys.push({ pubkey: ownerOrAuthority, isSigner: false, isWritable: false });
+        for (const signer of multiSigners) {
+            keys.push({
+                pubkey: signer.publicKey,
+                isSigner: true,
+                isWritable: false,
+            });
+        }
+    }
+    else {
+        keys.push({ pubkey: ownerOrAuthority, isSigner: true, isWritable: false });
+    }
+    return keys;
+}
+exports.addSigners = addSigners;
+/** Buffer layout for de/serializing a mint */
+exports.MintLayout = (0, buffer_layout_1.struct)([
+    (0, buffer_layout_1.u32)("mintAuthorityOption"),
+    (0, buffer_layout_utils_1.publicKey)("mintAuthority"),
+    (0, buffer_layout_utils_1.u64)("supply"),
+    (0, buffer_layout_1.u8)("decimals"),
+    (0, buffer_layout_utils_1.bool)("isInitialized"),
+    (0, buffer_layout_1.u32)("freezeAuthorityOption"),
+    (0, buffer_layout_utils_1.publicKey)("freezeAuthority"),
+]);
+/** Byte length of a mint */
+exports.MINT_SIZE = exports.MintLayout.span;
+/**
+ * Retrieve information about a mint
+ *
+ * @param connection Connection to use
+ * @param address    Mint account
+ * @param commitment Desired level of commitment for querying the state
+ * @param programId  SPL Token program account
+ *
+ * @return Mint information
+ */
+async function getMint(connection, address, commitment, programId = exports.TOKEN_PROGRAM_ID) {
+    const info = await connection.getAccountInfo(address, commitment);
+    if (!info)
+        throw new TokenAccountNotFoundError();
+    if (!info.owner.equals(programId))
+        throw new TokenInvalidAccountOwnerError();
+    if (info.data.length != exports.MINT_SIZE)
+        throw new TokenInvalidAccountSizeError();
+    const rawMint = exports.MintLayout.decode(info.data);
+    return {
+        address,
+        mintAuthority: rawMint.mintAuthorityOption ? rawMint.mintAuthority : null,
+        supply: rawMint.supply,
+        decimals: rawMint.decimals,
+        isInitialized: rawMint.isInitialized,
+        freezeAuthority: rawMint.freezeAuthorityOption ? rawMint.freezeAuthority : null,
+    };
+}
+exports.getMint = getMint;
+exports.MEMO_PROGRAM_ID = new web3_js_1.PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+/**
+ * Creates and returns an instruction which validates a string of UTF-8
+ * encoded characters and verifies that any accounts provided are signers of
+ * the transaction.  The program also logs the memo, as well as any verified
+ * signer addresses, to the transaction log, so that anyone can easily observe
+ * memos and know they were approved by zero or more addresses by inspecting
+ * the transaction log from a trusted provider.
+ *
+ * Public keys passed in via the signerPubkeys will identify Signers which
+ * must subsequently sign the Transaction including the returned
+ * TransactionInstruction in order for the transaction to be valid.
+ *
+ * @param memo The UTF-8 encoded memo string to validate
+ * @param signerPubkeys An array of public keys which must sign the
+ *        Transaction including the returned TransactionInstruction in order
+ *        for the transaction to be valid and the memo verification to
+ *        succeed.  null is allowed if there are no signers for the memo
+ *        verification.
+ **/
+function createMemoInstruction(memo, signerPubkeys) {
+    const keys = signerPubkeys == null
+        ? []
+        : signerPubkeys.map(function (key) {
+            return { pubkey: key, isSigner: true, isWritable: false };
+        });
+    return new web3_js_1.TransactionInstruction({
+        keys: keys,
+        programId: exports.MEMO_PROGRAM_ID,
+        data: buffer_1.Buffer.from(memo, "utf8"),
+    });
+}
+exports.createMemoInstruction = createMemoInstruction;

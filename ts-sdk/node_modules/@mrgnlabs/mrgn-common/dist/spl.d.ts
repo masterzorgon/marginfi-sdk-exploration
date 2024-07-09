@@ -1,0 +1,395 @@
+/// <reference types="node" />
+import { AccountInfo, AccountMeta, Commitment, Connection, PublicKey, Signer, TransactionInstruction } from "@solana/web3.js";
+import { Buffer } from "buffer";
+/** Information about a multisig */
+export interface Multisig {
+    /** Address of the multisig */
+    address: PublicKey;
+    /** Number of signers required */
+    m: number;
+    /** Number of possible signers, corresponds to the number of `signers` that are valid */
+    n: number;
+    /** Is this mint initialized */
+    isInitialized: boolean;
+    /** Full set of signers, of which `n` are valid */
+    signer1: PublicKey;
+    signer2: PublicKey;
+    signer3: PublicKey;
+    signer4: PublicKey;
+    signer5: PublicKey;
+    signer6: PublicKey;
+    signer7: PublicKey;
+    signer8: PublicKey;
+    signer9: PublicKey;
+    signer10: PublicKey;
+    signer11: PublicKey;
+}
+/** Multisig as stored by the program */
+export type RawMultisig = Omit<Multisig, "address">;
+/** Buffer layout for de/serializing a multisig */
+export declare const MultisigLayout: import("@solana/buffer-layout").Structure<RawMultisig>;
+/** Byte length of a multisig */
+export declare const MULTISIG_SIZE: number;
+export declare enum SplAccountType {
+    Uninitialized = 0,
+    Mint = 1,
+    Account = 2
+}
+export declare const ACCOUNT_TYPE_SIZE = 1;
+/** Base class for errors */
+export declare abstract class TokenError extends Error {
+    constructor(message?: string);
+}
+/** Thrown if an account is not found at the expected address */
+export declare class TokenAccountNotFoundError extends TokenError {
+    name: string;
+}
+/** Thrown if a program state account is not a valid Account */
+export declare class TokenInvalidAccountError extends TokenError {
+    name: string;
+}
+/** Thrown if a program state account is not owned by the expected token program */
+export declare class TokenInvalidAccountOwnerError extends TokenError {
+    name: string;
+}
+/** Thrown if the byte length of an program state account doesn't match the expected size */
+export declare class TokenInvalidAccountSizeError extends TokenError {
+    name: string;
+}
+/** Thrown if the mint of a token account doesn't match the expected mint */
+export declare class TokenInvalidMintError extends TokenError {
+    name: string;
+}
+/** Thrown if the owner of a token account doesn't match the expected owner */
+export declare class TokenInvalidOwnerError extends TokenError {
+    name: string;
+}
+/** Thrown if the owner of a token account is a PDA (Program Derived Address) */
+export declare class TokenOwnerOffCurveError extends TokenError {
+    name: string;
+}
+/** Thrown if an instruction's program is invalid */
+export declare class TokenInvalidInstructionProgramError extends TokenError {
+    name: string;
+}
+/** Thrown if an instruction's keys are invalid */
+export declare class TokenInvalidInstructionKeysError extends TokenError {
+    name: string;
+}
+/** Thrown if an instruction's data is invalid */
+export declare class TokenInvalidInstructionDataError extends TokenError {
+    name: string;
+}
+/** Thrown if an instruction's type is invalid */
+export declare class TokenInvalidInstructionTypeError extends TokenError {
+    name: string;
+}
+/** Thrown if the program does not support the desired instruction */
+export declare class TokenUnsupportedInstructionError extends TokenError {
+    name: string;
+}
+/** Information about a token account */
+export interface Account {
+    /** Address of the account */
+    address: PublicKey;
+    /** Mint associated with the account */
+    mint: PublicKey;
+    /** Owner of the account */
+    owner: PublicKey;
+    /** Number of tokens the account holds */
+    amount: bigint;
+    /** Authority that can transfer tokens from the account */
+    delegate: PublicKey | null;
+    /** Number of tokens the delegate is authorized to transfer */
+    delegatedAmount: bigint;
+    /** True if the account is initialized */
+    isInitialized: boolean;
+    /** True if the account is frozen */
+    isFrozen: boolean;
+    /** True if the account is a native token account */
+    isNative: boolean;
+    /**
+     * If the account is a native token account, it must be rent-exempt. The rent-exempt reserve is the amount that must
+     * remain in the balance until the account is closed.
+     */
+    rentExemptReserve: bigint | null;
+    /** Optional authority to close the account */
+    closeAuthority: PublicKey | null;
+    tlvData: Buffer;
+}
+/** Token account state as stored by the program */
+export declare enum AccountState {
+    Uninitialized = 0,
+    Initialized = 1,
+    Frozen = 2
+}
+/** Token account as stored by the program */
+export interface RawAccount {
+    mint: PublicKey;
+    owner: PublicKey;
+    amount: bigint;
+    delegateOption: 1 | 0;
+    delegate: PublicKey;
+    state: AccountState;
+    isNativeOption: 1 | 0;
+    isNative: bigint;
+    delegatedAmount: bigint;
+    closeAuthorityOption: 1 | 0;
+    closeAuthority: PublicKey;
+}
+/** Buffer layout for de/serializing a token account */
+export declare const AccountLayout: import("@solana/buffer-layout").Structure<RawAccount>;
+/** Byte length of a token account */
+export declare const ACCOUNT_SIZE: number;
+export declare const NATIVE_MINT: PublicKey;
+/**
+ * Retrieve information about a token account
+ *
+ * @param connection Connection to use
+ * @param address    Token account
+ * @param commitment Desired level of commitment for querying the state
+ * @param programId  SPL Token program account
+ *
+ * @return Token account information
+ */
+export declare function getAccount(connection: Connection, address: PublicKey, commitment?: Commitment, programId?: PublicKey): Promise<Account>;
+export declare const TOKEN_PROGRAM_ID: PublicKey;
+/**
+ * Retrieve information about multiple token accounts in a single RPC call
+ *
+ * @param connection Connection to use
+ * @param addresses  Token accounts
+ * @param commitment Desired level of commitment for querying the state
+ * @param programId  SPL Token program account
+ *
+ * @return Token account information
+ */
+export declare function getMultipleAccounts(connection: Connection, addresses: PublicKey[], commitment?: Commitment, programId?: PublicKey): Promise<Account[]>;
+/** Get the minimum lamport balance for a base token account to be rent exempt
+ *
+ * @param connection Connection to use
+ * @param commitment Desired level of commitment for querying the state
+ *
+ * @return Amount of lamports required
+ */
+export declare function getMinimumBalanceForRentExemptAccount(connection: Connection, commitment?: Commitment): Promise<number>;
+export declare enum ExtensionType {
+    Uninitialized = 0,
+    TransferFeeConfig = 1,
+    TransferFeeAmount = 2,
+    MintCloseAuthority = 3,
+    ConfidentialTransferMint = 4,
+    ConfidentialTransferAccount = 5,
+    DefaultAccountState = 6,
+    ImmutableOwner = 7,
+    MemoTransfer = 8,
+    NonTransferable = 9,
+    InterestBearingMint = 10
+}
+export declare function getAccountLen(extensionTypes: ExtensionType[]): number;
+export declare const TYPE_SIZE = 2;
+export declare const LENGTH_SIZE = 2;
+/** Get the minimum lamport balance for a rent-exempt token account with extensions
+ *
+ * @param connection Connection to use
+ * @param extensions
+ * @param commitment Desired level of commitment for querying the state
+ *
+ * @return Amount of lamports required
+ */
+export declare function getMinimumBalanceForRentExemptAccountWithExtensions(connection: Connection, extensions: ExtensionType[], commitment?: Commitment): Promise<number>;
+/**
+ * Unpack a token account
+ *
+ * @param address   Token account
+ * @param info      Token account data
+ * @param programId SPL Token program account
+ *
+ * @return Unpacked token account
+ */
+export declare function unpackAccount(address: PublicKey, info: AccountInfo<Buffer> | null, programId?: PublicKey): Account;
+/** Address of the SPL Associated Token Account program */
+export declare const ASSOCIATED_TOKEN_PROGRAM_ID: PublicKey;
+/**
+ * Get the address of the associated token account for a given mint and owner
+ *
+ * @param mint                     Token mint account
+ * @param owner                    Owner of the new account
+ * @param allowOwnerOffCurve       Allow the owner account to be a PDA (Program Derived Address)
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Address of the associated token account
+ */
+export declare function getAssociatedTokenAddressSync(mint: PublicKey, owner: PublicKey, allowOwnerOffCurve?: boolean, programId?: PublicKey, associatedTokenProgramId?: PublicKey): PublicKey;
+/**
+ * Construct an AssociatedTokenAccount instruction
+ *
+ * @param payer                    Payer of the initialization fees
+ * @param associatedToken          New associated token account
+ * @param owner                    Owner of the new account
+ * @param mint                     Token mint account
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export declare function createAssociatedTokenAccountInstruction(payer: PublicKey, associatedToken: PublicKey, owner: PublicKey, mint: PublicKey, programId?: PublicKey, associatedTokenProgramId?: PublicKey): TransactionInstruction;
+/**
+ * Construct a CreateAssociatedTokenAccountIdempotent instruction
+ *
+ * @param payer                    Payer of the initialization fees
+ * @param associatedToken          New associated token account
+ * @param owner                    Owner of the new account
+ * @param mint                     Token mint account
+ * @param programId                SPL Token program account
+ * @param associatedTokenProgramId SPL Associated Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export declare function createAssociatedTokenAccountIdempotentInstruction(payer: PublicKey, associatedToken: PublicKey, owner: PublicKey, mint: PublicKey, programId?: PublicKey, associatedTokenProgramId?: PublicKey): TransactionInstruction;
+/** TODO: docs */
+export interface SyncNativeInstructionData {
+    instruction: TokenInstruction.SyncNative;
+}
+/** TODO: docs */
+export declare const syncNativeInstructionData: import("@solana/buffer-layout").Structure<SyncNativeInstructionData>;
+/**
+ * Construct a SyncNative instruction
+ *
+ * @param account   Native account to sync lamports from
+ * @param programId SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export declare function createSyncNativeInstruction(account: PublicKey, programId?: PublicKey): TransactionInstruction;
+/** TODO: docs */
+export interface CloseAccountInstructionData {
+    instruction: TokenInstruction.CloseAccount;
+}
+/** TODO: docs */
+export declare const closeAccountInstructionData: import("@solana/buffer-layout").Structure<CloseAccountInstructionData>;
+/**
+ * Construct a CloseAccount instruction
+ *
+ * @param account      Account to close
+ * @param destination  Account to receive the remaining balance of the closed account
+ * @param authority    Account close authority
+ * @param multiSigners Signing accounts if `authority` is a multisig
+ * @param programId    SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export declare function createCloseAccountInstruction(account: PublicKey, destination: PublicKey, authority: PublicKey, multiSigners?: Signer[], programId?: PublicKey): TransactionInstruction;
+/** TODO: docs */
+export interface TransferCheckedInstructionData {
+    instruction: TokenInstruction.TransferChecked;
+    amount: bigint;
+    decimals: number;
+}
+/** TODO: docs */
+export declare const transferCheckedInstructionData: import("@solana/buffer-layout").Structure<TransferCheckedInstructionData>;
+/**
+ * Construct a TransferChecked instruction
+ *
+ * @param source       Source account
+ * @param mint         Mint account
+ * @param destination  Destination account
+ * @param owner        Owner of the source account
+ * @param amount       Number of tokens to transfer
+ * @param decimals     Number of decimals in transfer amount
+ * @param multiSigners Signing accounts if `owner` is a multisig
+ * @param programId    SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export declare function createTransferCheckedInstruction(source: PublicKey, mint: PublicKey, destination: PublicKey, owner: PublicKey, amount: number | bigint, decimals: number, multiSigners?: Signer[], programId?: PublicKey): TransactionInstruction;
+/** Instructions defined by the program */
+export declare enum TokenInstruction {
+    InitializeAccount = 1,
+    TransferChecked = 12,
+    CloseAccount = 9,
+    SyncNative = 17
+}
+/** TODO: docs */
+export interface InitializeAccountInstructionData {
+    instruction: TokenInstruction.InitializeAccount;
+}
+export declare const initializeAccountInstructionData: import("@solana/buffer-layout").Structure<InitializeAccountInstructionData>;
+/**
+ * Construct an InitializeAccount instruction
+ *
+ * @param account   New token account
+ * @param mint      Mint account
+ * @param owner     Owner of the new account
+ * @param programId SPL Token program account
+ *
+ * @return Instruction to add to a transaction
+ */
+export declare function createInitializeAccountInstruction(account: PublicKey, mint: PublicKey, owner: PublicKey, programId?: PublicKey): TransactionInstruction;
+/** @internal */
+export declare function addSigners(keys: AccountMeta[], ownerOrAuthority: PublicKey, multiSigners: Signer[]): AccountMeta[];
+export interface Mint {
+    /** Address of the mint */
+    address: PublicKey;
+    /**
+     * Optional authority used to mint new tokens. The mint authority may only be provided during mint creation.
+     * If no mint authority is present then the mint has a fixed supply and no further tokens may be minted.
+     */
+    mintAuthority: PublicKey | null;
+    /** Total supply of tokens */
+    supply: bigint;
+    /** Number of base 10 digits to the right of the decimal place */
+    decimals: number;
+    /** Is this mint initialized */
+    isInitialized: boolean;
+    /** Optional authority to freeze token accounts */
+    freezeAuthority: PublicKey | null;
+}
+/** Mint as stored by the program */
+export interface RawMint {
+    mintAuthorityOption: 1 | 0;
+    mintAuthority: PublicKey;
+    supply: bigint;
+    decimals: number;
+    isInitialized: boolean;
+    freezeAuthorityOption: 1 | 0;
+    freezeAuthority: PublicKey;
+}
+/** Buffer layout for de/serializing a mint */
+export declare const MintLayout: import("@solana/buffer-layout").Structure<RawMint>;
+/** Byte length of a mint */
+export declare const MINT_SIZE: number;
+/**
+ * Retrieve information about a mint
+ *
+ * @param connection Connection to use
+ * @param address    Mint account
+ * @param commitment Desired level of commitment for querying the state
+ * @param programId  SPL Token program account
+ *
+ * @return Mint information
+ */
+export declare function getMint(connection: Connection, address: PublicKey, commitment?: Commitment, programId?: PublicKey): Promise<Mint>;
+export declare const MEMO_PROGRAM_ID: PublicKey;
+/**
+ * Creates and returns an instruction which validates a string of UTF-8
+ * encoded characters and verifies that any accounts provided are signers of
+ * the transaction.  The program also logs the memo, as well as any verified
+ * signer addresses, to the transaction log, so that anyone can easily observe
+ * memos and know they were approved by zero or more addresses by inspecting
+ * the transaction log from a trusted provider.
+ *
+ * Public keys passed in via the signerPubkeys will identify Signers which
+ * must subsequently sign the Transaction including the returned
+ * TransactionInstruction in order for the transaction to be valid.
+ *
+ * @param memo The UTF-8 encoded memo string to validate
+ * @param signerPubkeys An array of public keys which must sign the
+ *        Transaction including the returned TransactionInstruction in order
+ *        for the transaction to be valid and the memo verification to
+ *        succeed.  null is allowed if there are no signers for the memo
+ *        verification.
+ **/
+export declare function createMemoInstruction(memo: string, signerPubkeys?: Array<PublicKey>): TransactionInstruction;
+//# sourceMappingURL=spl.d.ts.map

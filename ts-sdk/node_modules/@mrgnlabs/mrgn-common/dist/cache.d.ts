@@ -1,0 +1,101 @@
+import { Infer } from "superstruct";
+interface TokenMetadata {
+    icon?: string;
+    name: string;
+    symbol: string;
+}
+declare const TokenMetadataRaw: import("superstruct").Struct<{
+    symbol: string;
+    address: string;
+    chainId: number;
+    decimals: number;
+    name: string;
+    logoURI: string;
+    extensions: Record<string, unknown>;
+}, {
+    address: import("superstruct").Struct<string, null>;
+    chainId: import("superstruct").Struct<number, null>;
+    decimals: import("superstruct").Struct<number, null>;
+    name: import("superstruct").Struct<string, null>;
+    symbol: import("superstruct").Struct<string, null>;
+    logoURI: import("superstruct").Struct<string, null>;
+    extensions: import("superstruct").Struct<Record<string, unknown>, null>;
+}>;
+declare const TokenMetadataList: import("superstruct").Struct<{
+    symbol: string;
+    address: string;
+    chainId: number;
+    decimals: number;
+    name: string;
+    logoURI: string;
+    extensions: Record<string, unknown>;
+}[], import("superstruct").Struct<{
+    symbol: string;
+    address: string;
+    chainId: number;
+    decimals: number;
+    name: string;
+    logoURI: string;
+    extensions: Record<string, unknown>;
+}, {
+    address: import("superstruct").Struct<string, null>;
+    chainId: import("superstruct").Struct<number, null>;
+    decimals: import("superstruct").Struct<number, null>;
+    name: import("superstruct").Struct<string, null>;
+    symbol: import("superstruct").Struct<string, null>;
+    logoURI: import("superstruct").Struct<string, null>;
+    extensions: import("superstruct").Struct<Record<string, unknown>, null>;
+}>>;
+type TokenMetadataRaw = Infer<typeof TokenMetadataRaw>;
+type TokenMetadataListRaw = Infer<typeof TokenMetadataList>;
+declare function loadTokenMetadatas(): Promise<{
+    [symbol: string]: TokenMetadata;
+}>;
+type TokenMetadataMap = {
+    [symbol: string]: TokenMetadata;
+};
+export { loadTokenMetadatas };
+export type { TokenMetadata, TokenMetadataRaw, TokenMetadataListRaw, TokenMetadataMap };
+interface BankMetadata {
+    tokenAddress: string;
+    tokenName: string;
+    tokenSymbol: string;
+}
+declare const BankMetadataRaw: import("superstruct").Struct<{
+    bankAddress: string;
+    tokenAddress: string;
+    tokenName: string;
+    tokenSymbol: string;
+}, {
+    bankAddress: import("superstruct").Struct<string, null>;
+    tokenAddress: import("superstruct").Struct<string, null>;
+    tokenName: import("superstruct").Struct<string, null>;
+    tokenSymbol: import("superstruct").Struct<string, null>;
+}>;
+declare const BankMetadataList: import("superstruct").Struct<{
+    bankAddress: string;
+    tokenAddress: string;
+    tokenName: string;
+    tokenSymbol: string;
+}[], import("superstruct").Struct<{
+    bankAddress: string;
+    tokenAddress: string;
+    tokenName: string;
+    tokenSymbol: string;
+}, {
+    bankAddress: import("superstruct").Struct<string, null>;
+    tokenAddress: import("superstruct").Struct<string, null>;
+    tokenName: import("superstruct").Struct<string, null>;
+    tokenSymbol: import("superstruct").Struct<string, null>;
+}>>;
+type BankMetadataRaw = Infer<typeof BankMetadataRaw>;
+type BankMetadataListRaw = Infer<typeof BankMetadataList>;
+declare function loadBankMetadatas(): Promise<{
+    [address: string]: BankMetadata;
+}>;
+type BankMetadataMap = {
+    [address: string]: BankMetadata;
+};
+export { loadBankMetadatas };
+export type { BankMetadata, BankMetadataRaw, BankMetadataListRaw, BankMetadataMap };
+//# sourceMappingURL=cache.d.ts.map
