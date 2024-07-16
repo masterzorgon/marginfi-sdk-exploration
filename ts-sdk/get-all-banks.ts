@@ -1,8 +1,15 @@
-import { AccountType, Bank } from '@mrgnlabs/marginfi-client-v2';
+import { Connection } from "@solana/web3.js";
+import { AccountType, Bank, MarginfiClient, getConfig } from '@mrgnlabs/marginfi-client-v2';
+import { NodeWallet } from "@mrgnlabs/mrgn-common";
 
-import { connection, client } from './utils/config';
+const RPC_ENDPOINT = "https://rpc.ironforge.network/mainnet?apiKey=01HTYZW4C7W74CTK8N8XN2GMR5";
 
 async function main() {
+    const connection = new Connection(RPC_ENDPOINT, "confirmed");
+    const wallet = NodeWallet.local();
+    const config = getConfig("production");
+    const client = await MarginfiClient.fetch(config, wallet, connection);
+
     // Fetch all public keys of banks owned by the mfi program
     const bankPubKeys = await client.getAllProgramAccountAddresses(AccountType.Bank);
 
