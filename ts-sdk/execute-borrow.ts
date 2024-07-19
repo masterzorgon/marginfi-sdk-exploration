@@ -15,6 +15,7 @@ async function main() {
     const accounts = await client.getMarginfiAccountsForAuthority(client.wallet.publicKey);
     const account = await MarginfiAccountWrapper.fetch(accounts[0].address, client);
 
+    // publickey for the USDT bank
     const USDTBank = new PublicKey("HmpMfL8942u22htC4EMiWgLX931g3sacXFR6KjuLgKLV");
 
     try {
