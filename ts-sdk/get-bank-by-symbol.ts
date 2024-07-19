@@ -10,7 +10,7 @@ async function main() {
     const config = getConfig("production");
     const client = await MarginfiClient.fetch(config, wallet, connection);
 
-    const bankSymbol = "GUAC";
+    const bankSymbol = "USDT";
     const bank = client.getBankByTokenSymbol(bankSymbol);
     console.log(bank)
 }
