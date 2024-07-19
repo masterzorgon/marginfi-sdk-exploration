@@ -19,6 +19,7 @@ async function main() {
     const USDTBank = new PublicKey("HmpMfL8942u22htC4EMiWgLX931g3sacXFR6KjuLgKLV");
 
     try {
+        // make sure you're borrowing an amount that doesn't put your account health below the liquidation threshold
         const sig = await account.borrow(0.05, USDTBank, 0.00005);
         console.log(sig);
     } catch (error) {
