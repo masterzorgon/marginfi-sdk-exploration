@@ -12,9 +12,10 @@ async function main() {
     const config = getConfig("production");
     const client = await MarginfiClient.fetch(config, wallet, connection);
     
-    const TOKEN_MINT = "3psH1Mj1f7yUfaD5gh6Zj7epE8hhrMkMETgv5TshQA4o";
-    const bank = await client.getBankByMint(TOKEN_MINT)
+    // const TOKEN_MINT = "3psH1Mj1f7yUfaD5gh6Zj7epE8hhrMkMETgv5TshQA4o";
+    const bank = await client.getBankByPk("A7vBgCowCYeja7GTc3pyqUBdC9Gkue2gWaMjGZW38meM")
     console.log(bank);
+    bank.
 }
 
 main().catch((e) => console.log(e));

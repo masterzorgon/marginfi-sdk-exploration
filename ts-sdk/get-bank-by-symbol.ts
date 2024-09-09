@@ -12,9 +12,12 @@ async function main() {
     const config = getConfig("production");
     const client = await MarginfiClient.fetch(config, wallet, connection);
 
-    const bankSymbol = "USDT";
+    const bankSymbol = "bSOL";
     const bank = client.getBankByTokenSymbol(bankSymbol);
-    console.log(bank)
+    console.log(bank);
+
+    const totalAssets = bank?.totalAssetShares
+    // console.log(totalAssets!.toString())
 }
 
 main().catch((e) => console.log(e));

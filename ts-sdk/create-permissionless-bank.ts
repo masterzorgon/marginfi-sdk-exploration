@@ -4,6 +4,7 @@ import { BankConfigOpt, OperationalState, OracleSetup, RiskTier } from "@mrgnlab
 import { BigNumber } from "bignumber.js";
 import { NodeWallet } from "@mrgnlabs/mrgn-common";
 import { MarginfiClient } from "@mrgnlabs/marginfi-client-v2";
+import { MarginfiAccountWrapper } from "@mrgnlabs/marginfi-client-v2";
 
 require('dotenv').config();
 
@@ -54,6 +55,7 @@ async function main() {
         connection,
         { readOnly: true, preloadedBankAddresses: [] }
     );
+
 
     console.log("Creating banks in group:", client.groupAddress.toBase58());
     console.log("Creating banks with authority:", client.wallet.publicKey.toBase58());
